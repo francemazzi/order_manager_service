@@ -1,0 +1,11 @@
+- login / registrazione con jwt
+- reset password
+- gestione ordini
+- creazione ordini
+- modifica ordini
+- eliminazione ordini
+- gestione prodotti
+- creazione prodotti
+- modifica prodotti
+- eliminazione prodotti
+- gestione utenti

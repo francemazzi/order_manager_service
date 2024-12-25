@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  web:
+    build: .
+    ports:
+      - "5001:5000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/order_manager
+      - JWT_SECRET_KEY=your-secret-key-change-in-production
+      - MAIL_SERVER=mailhog
+      - MAIL_PORT=1025
+      - MAIL_USE_TLS=False
+      - MAIL_USE_SSL=False
+      - MAIL_DEFAULT_SENDER=noreply@ordermanager.com
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - mailhog
+    volumes:
+      - .:/app
+    command: python app.py
+
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=order_manager
+    ports:
+      - "5433:5432"
+
+  mailhog:
+    image: jcalonso/mailhog:latest
+    platform: linux/arm64
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  postgres_data:
