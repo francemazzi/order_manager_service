@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from extensions import db
-from models.user import User
+from models.user import User, UserRole
 from datetime import timedelta
 from utils.email import send_welcome_email
 
@@ -20,7 +20,8 @@ def register():
     user = User(
         email=data['email'],
         first_name=data.get('first_name'),
-        last_name=data.get('last_name')
+        last_name=data.get('last_name'),
+        role=UserRole.BASIC
     )
     user.set_password(data['password'])
     

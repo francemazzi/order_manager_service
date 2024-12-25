@@ -1,10 +1,12 @@
 from flask import Flask, jsonify, redirect, url_for
 from flask_swagger_ui import get_swaggerui_blueprint
+from flask_migrate import Migrate
 import os
 from dotenv import load_dotenv
 from extensions import db, jwt, cors, mail
 from models.user import User
 from routes.auth import auth_bp
+from routes.user_routes import user_bp
 from utils.commands import list_users, shell_command
 import time
 import psycopg2
@@ -44,6 +46,8 @@ def create_app():
     jwt.init_app(app)
     mail.init_app(app)
     cors.init_app(app)
+    
+    migrate = Migrate(app, db)
 
     SWAGGER_URL = '/api/docs'
     API_URL = '/static/swagger.json'
@@ -57,6 +61,7 @@ def create_app():
     app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(user_bp, url_prefix='/api')
 
     app.cli.add_command(list_users)
     app.cli.add_command(shell_command)
@@ -77,6 +82,13 @@ def create_app():
                     "register": "/api/auth/register",
                     "login": "/api/auth/login",
                     "profile": "/api/auth/me"
+                },
+                "users": {
+                    "list": "/api/users",
+                    "create": "/api/users",
+                    "get": "/api/users/<id>",
+                    "update": "/api/users/<id>",
+                    "delete": "/api/users/<id>"
                 }
             }
         })
