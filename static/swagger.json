@@ -282,13 +282,321 @@
           }
         }
       }
-    }
-  },
-  "securityDefinitions": {
-    "Bearer": {
-      "type": "apiKey",
-      "name": "Authorization",
-      "in": "header"
+    },
+    "/companies": {
+      "get": {
+        "tags": ["Companies"],
+        "summary": "Ottiene la lista di tutte le aziende",
+        "responses": {
+          "200": {
+            "description": "Lista delle aziende recuperata con successo",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Company"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Companies"],
+        "summary": "Crea una nuova azienda",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Nome dell'azienda"
+                },
+                "vat_number": {
+                  "type": "string",
+                  "description": "Partita IVA"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "address": {
+                  "type": "string"
+                },
+                "phone": {
+                  "type": "string"
+                }
+              },
+              "required": ["name", "vat_number", "email"]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Azienda creata con successo",
+            "schema": {
+              "$ref": "#/definitions/Company"
+            }
+          },
+          "400": {
+            "description": "Dati mancanti o non validi"
+          },
+          "409": {
+            "description": "Partita IVA o email già registrata"
+          }
+        }
+      }
+    },
+    "/companies/{company_id}": {
+      "get": {
+        "tags": ["Companies"],
+        "summary": "Ottiene i dettagli di un'azienda specifica",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dettagli azienda recuperati con successo",
+            "schema": {
+              "$ref": "#/definitions/Company"
+            }
+          },
+          "404": {
+            "description": "Azienda non trovata"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Companies"],
+        "summary": "Aggiorna i dati di un'azienda",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CompanyUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Azienda aggiornata con successo",
+            "schema": {
+              "$ref": "#/definitions/Company"
+            }
+          },
+          "404": {
+            "description": "Azienda non trovata"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Companies"],
+        "summary": "Elimina un'azienda",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Azienda eliminata con successo"
+          },
+          "404": {
+            "description": "Azienda non trovata"
+          }
+        }
+      }
+    },
+    "/items": {
+      "get": {
+        "tags": ["Items"],
+        "summary": "Ottiene la lista di tutti i prodotti",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "description": "Filtra i prodotti per azienda"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista dei prodotti recuperata con successo",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Item"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Items"],
+        "summary": "Crea un nuovo prodotto",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Nome del prodotto"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "price": {
+                  "type": "number",
+                  "format": "float",
+                  "description": "Prezzo del prodotto"
+                },
+                "price_unit": {
+                  "type": "string",
+                  "description": "Unità di misura del prezzo (es. EUR, USD)",
+                  "default": "EUR"
+                },
+                "sku": {
+                  "type": "string",
+                  "description": "Codice SKU del prodotto"
+                },
+                "stock": {
+                  "type": "integer",
+                  "description": "Quantità disponibile"
+                },
+                "stock_unit": {
+                  "type": "string",
+                  "description": "Unità di misura dello stock (es. PZ, KG, LT)",
+                  "default": "PZ"
+                },
+                "company_id": {
+                  "type": "integer",
+                  "description": "ID dell'azienda fornitrice"
+                }
+              },
+              "required": ["name", "price", "sku", "company_id"]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Prodotto creato con successo",
+            "schema": {
+              "$ref": "#/definitions/Item"
+            }
+          },
+          "400": {
+            "description": "Dati mancanti o non validi"
+          },
+          "404": {
+            "description": "Azienda non trovata"
+          },
+          "409": {
+            "description": "SKU già esistente per questa azienda"
+          }
+        }
+      }
+    },
+    "/items/{item_id}": {
+      "get": {
+        "tags": ["Items"],
+        "summary": "Ottiene i dettagli di un prodotto specifico",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dettagli prodotto recuperati con successo",
+            "schema": {
+              "$ref": "#/definitions/Item"
+            }
+          },
+          "404": {
+            "description": "Prodotto non trovato"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Items"],
+        "summary": "Aggiorna i dati di un prodotto",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ItemUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prodotto aggiornato con successo",
+            "schema": {
+              "$ref": "#/definitions/Item"
+            }
+          },
+          "404": {
+            "description": "Prodotto non trovato"
+          },
+          "409": {
+            "description": "SKU già esistente per questa azienda"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Items"],
+        "summary": "Elimina un prodotto",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Prodotto eliminato con successo"
+          },
+          "404": {
+            "description": "Prodotto non trovato"
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -312,6 +620,143 @@
           "type": "boolean"
         }
       }
+    },
+    "Company": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "vat_number": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "address": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "CompanyUpdate": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "vat_number": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "address": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        }
+      }
+    },
+    "Item": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number",
+          "format": "float"
+        },
+        "price_unit": {
+          "type": "string",
+          "description": "Unità di misura del prezzo",
+          "example": "EUR"
+        },
+        "sku": {
+          "type": "string"
+        },
+        "stock": {
+          "type": "integer"
+        },
+        "stock_unit": {
+          "type": "string",
+          "description": "Unità di misura dello stock",
+          "example": "PZ"
+        },
+        "company_id": {
+          "type": "integer"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "ItemUpdate": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number",
+          "format": "float"
+        },
+        "price_unit": {
+          "type": "string",
+          "description": "Unità di misura del prezzo (es. EUR, USD)"
+        },
+        "sku": {
+          "type": "string"
+        },
+        "stock": {
+          "type": "integer"
+        },
+        "stock_unit": {
+          "type": "string",
+          "description": "Unità di misura dello stock (es. PZ, KG, LT)"
+        },
+        "company_id": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
     }
   }
 }

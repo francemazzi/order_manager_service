@@ -1,6 +1,7 @@
 # Order Manager Service
 
 Un servizio di gestione ordini costruito con Flask, PostgreSQL e autenticazione JWT.
+Il sistema è bassato su questo test task: https://docs.google.com/document/d/12SxnIHz93bQNMXlwbd7EaxczEhspK5mpir4fjGzYyN8/edit?usp=sharing
 
 ## Requisiti di Sistema
 

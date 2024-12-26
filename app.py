@@ -7,6 +7,8 @@ from extensions import db, jwt, cors, mail
 from models.user import User
 from routes.auth import auth_bp
 from routes.user_routes import user_bp
+from routes.company_routes import company_bp
+from routes.item_routes import item_bp
 from utils.commands import list_users, shell_command
 import time
 import psycopg2
@@ -62,6 +64,8 @@ def create_app():
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(user_bp, url_prefix='/api')
+    app.register_blueprint(company_bp, url_prefix='/api')
+    app.register_blueprint(item_bp, url_prefix='/api')
 
     app.cli.add_command(list_users)
     app.cli.add_command(shell_command)
@@ -89,6 +93,20 @@ def create_app():
                     "get": "/api/users/<id>",
                     "update": "/api/users/<id>",
                     "delete": "/api/users/<id>"
+                },
+                "companies": {
+                    "list": "/api/companies",
+                    "create": "/api/companies",
+                    "get": "/api/companies/<id>",
+                    "update": "/api/companies/<id>",
+                    "delete": "/api/companies/<id>"
+                },
+                "items": {
+                    "list": "/api/items",
+                    "create": "/api/items",
+                    "get": "/api/items/<id>",
+                    "update": "/api/items/<id>",
+                    "delete": "/api/items/<id>"
                 }
             }
         })
