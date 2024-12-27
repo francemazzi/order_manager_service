@@ -9,6 +9,9 @@ from routes.auth import auth_bp
 from routes.user_routes import user_bp
 from routes.company_routes import company_bp
 from routes.item_routes import item_bp
+from routes.purchase_routes import purchase_bp
+from routes.sale_routes import sale_bp
+from routes.analytics_routes import analytics_bp
 from utils.commands import list_users, shell_command
 import time
 import psycopg2
@@ -66,6 +69,9 @@ def create_app():
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(company_bp, url_prefix='/api')
     app.register_blueprint(item_bp, url_prefix='/api')
+    app.register_blueprint(purchase_bp, url_prefix='/api')
+    app.register_blueprint(sale_bp, url_prefix='/api')
+    app.register_blueprint(analytics_bp, url_prefix='/api')
 
     app.cli.add_command(list_users)
     app.cli.add_command(shell_command)

@@ -597,6 +597,744 @@
           }
         }
       }
+    },
+    "/purchases": {
+      "get": {
+        "tags": ["Purchases"],
+        "summary": "Ottiene la lista degli acquisti",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "query",
+            "type": "integer",
+            "description": "Filtra per azienda fornitrice"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "type": "string",
+            "description": "Filtra per stato (pending, confirmed, delivered, cancelled)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista degli acquisti recuperata con successo",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Purchase"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Purchases"],
+        "summary": "Crea un nuovo acquisto",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "company_id": {
+                  "type": "integer",
+                  "description": "ID dell'azienda fornitrice"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "item_id": {
+                        "type": "integer",
+                        "description": "ID del prodotto"
+                      },
+                      "quantity": {
+                        "type": "integer",
+                        "description": "Quantità da acquistare"
+                      },
+                      "unit_price": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Prezzo unitario"
+                      }
+                    },
+                    "required": ["item_id", "quantity", "unit_price"]
+                  }
+                },
+                "notes": {
+                  "type": "string",
+                  "description": "Note aggiuntive"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Stato iniziale dell'acquisto",
+                  "default": "pending",
+                  "enum": ["pending", "confirmed", "delivered", "cancelled"]
+                }
+              },
+              "required": ["company_id", "items"]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Acquisto creato con successo",
+            "schema": {
+              "$ref": "#/definitions/Purchase"
+            }
+          },
+          "400": {
+            "description": "Dati mancanti o non validi"
+          },
+          "404": {
+            "description": "Azienda o prodotto non trovato"
+          }
+        }
+      }
+    },
+    "/purchases/{purchase_id}": {
+      "get": {
+        "tags": ["Purchases"],
+        "summary": "Ottiene i dettagli di un acquisto",
+        "parameters": [
+          {
+            "name": "purchase_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dettagli acquisto recuperati con successo",
+            "schema": {
+              "$ref": "#/definitions/Purchase"
+            }
+          },
+          "404": {
+            "description": "Acquisto non trovato"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Purchases"],
+        "summary": "Aggiorna lo stato di un acquisto",
+        "parameters": [
+          {
+            "name": "purchase_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": ["pending", "confirmed", "delivered", "cancelled"]
+                },
+                "notes": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Acquisto aggiornato con successo",
+            "schema": {
+              "$ref": "#/definitions/Purchase"
+            }
+          },
+          "400": {
+            "description": "Stato non valido"
+          },
+          "404": {
+            "description": "Acquisto non trovato"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Purchases"],
+        "summary": "Elimina un acquisto",
+        "parameters": [
+          {
+            "name": "purchase_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Acquisto eliminato con successo"
+          },
+          "400": {
+            "description": "Non è possibile eliminare un acquisto non in stato pending"
+          },
+          "404": {
+            "description": "Acquisto non trovato"
+          }
+        }
+      }
+    },
+    "/sales": {
+      "get": {
+        "tags": ["Sales"],
+        "summary": "Ottiene la lista delle vendite",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "type": "string",
+            "description": "Filtra per stato (pending, confirmed, shipped, delivered, cancelled)"
+          },
+          {
+            "name": "customer_email",
+            "in": "query",
+            "type": "string",
+            "description": "Filtra per email del cliente"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista delle vendite recuperata con successo",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Sale"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Sales"],
+        "summary": "Crea una nuova vendita",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customer_name": {
+                  "type": "string",
+                  "description": "Nome del cliente"
+                },
+                "customer_email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "customer_address": {
+                  "type": "string"
+                },
+                "customer_phone": {
+                  "type": "string"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "item_id": {
+                        "type": "integer",
+                        "description": "ID del prodotto"
+                      },
+                      "quantity": {
+                        "type": "integer",
+                        "description": "Quantità da vendere"
+                      },
+                      "unit_price": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Prezzo unitario di vendita"
+                      }
+                    },
+                    "required": ["item_id", "quantity", "unit_price"]
+                  }
+                },
+                "notes": {
+                  "type": "string",
+                  "description": "Note aggiuntive"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Stato iniziale della vendita",
+                  "default": "pending",
+                  "enum": [
+                    "pending",
+                    "confirmed",
+                    "shipped",
+                    "delivered",
+                    "cancelled"
+                  ]
+                }
+              },
+              "required": ["customer_name", "items"]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Vendita creata con successo",
+            "schema": {
+              "$ref": "#/definitions/Sale"
+            }
+          },
+          "400": {
+            "description": "Dati mancanti o non validi"
+          },
+          "404": {
+            "description": "Prodotto non trovato"
+          }
+        }
+      }
+    },
+    "/sales/{sale_id}": {
+      "get": {
+        "tags": ["Sales"],
+        "summary": "Ottiene i dettagli di una vendita",
+        "parameters": [
+          {
+            "name": "sale_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dettagli vendita recuperati con successo",
+            "schema": {
+              "$ref": "#/definitions/Sale"
+            }
+          },
+          "404": {
+            "description": "Vendita non trovata"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Sales"],
+        "summary": "Aggiorna una vendita",
+        "parameters": [
+          {
+            "name": "sale_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "confirmed",
+                    "shipped",
+                    "delivered",
+                    "cancelled"
+                  ]
+                },
+                "customer_name": {
+                  "type": "string"
+                },
+                "customer_email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "customer_address": {
+                  "type": "string"
+                },
+                "customer_phone": {
+                  "type": "string"
+                },
+                "notes": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vendita aggiornata con successo",
+            "schema": {
+              "$ref": "#/definitions/Sale"
+            }
+          },
+          "400": {
+            "description": "Dati non validi o stato non valido"
+          },
+          "404": {
+            "description": "Vendita non trovata"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Sales"],
+        "summary": "Elimina una vendita",
+        "parameters": [
+          {
+            "name": "sale_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Vendita eliminata con successo"
+          },
+          "400": {
+            "description": "Non è possibile eliminare una vendita non in stato pending"
+          },
+          "404": {
+            "description": "Vendita non trovata"
+          }
+        }
+      }
+    },
+    "/analytics/sales": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Ottiene l'analisi delle vendite per fornitore",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "description": "Data di inizio analisi (YYYY-MM-DD)"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "description": "Data di fine analisi (YYYY-MM-DD)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analisi vendite recuperata con successo",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "period": {
+                  "type": "object",
+                  "properties": {
+                    "start_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "end_date": {
+                      "type": "string",
+                      "format": "date"
+                    }
+                  }
+                },
+                "data": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "company_name": {
+                        "type": "string"
+                      },
+                      "total_sales": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "total_items_sold": {
+                        "type": "integer"
+                      },
+                      "average_order_value": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "items_analysis": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "item_name": {
+                              "type": "string"
+                            },
+                            "sku": {
+                              "type": "string"
+                            },
+                            "total_quantity": {
+                              "type": "integer"
+                            },
+                            "total_revenue": {
+                              "type": "number",
+                              "format": "float"
+                            },
+                            "average_price": {
+                              "type": "number",
+                              "format": "float"
+                            }
+                          }
+                        }
+                      },
+                      "daily_sales": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "date": {
+                              "type": "string",
+                              "format": "date"
+                            },
+                            "revenue": {
+                              "type": "number",
+                              "format": "float"
+                            },
+                            "quantity": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      },
+                      "top_selling_items": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "item_name": {
+                              "type": "string"
+                            },
+                            "sku": {
+                              "type": "string"
+                            },
+                            "quantity": {
+                              "type": "integer"
+                            },
+                            "revenue": {
+                              "type": "number",
+                              "format": "float"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Formato data non valido"
+          }
+        }
+      }
+    },
+    "/analytics/inventory": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Ottiene l'analisi dell'inventario per fornitore",
+        "responses": {
+          "200": {
+            "description": "Analisi inventario recuperata con successo",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "company_name": {
+                        "type": "string"
+                      },
+                      "total_items": {
+                        "type": "integer"
+                      },
+                      "total_stock_value": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "items_detail": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "item_name": {
+                              "type": "string"
+                            },
+                            "sku": {
+                              "type": "string"
+                            },
+                            "current_stock": {
+                              "type": "integer"
+                            },
+                            "stock_unit": {
+                              "type": "string"
+                            },
+                            "current_price": {
+                              "type": "number",
+                              "format": "float"
+                            },
+                            "price_unit": {
+                              "type": "string"
+                            },
+                            "stock_value": {
+                              "type": "number",
+                              "format": "float"
+                            }
+                          }
+                        }
+                      },
+                      "low_stock_items": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "item_name": {
+                              "type": "string"
+                            },
+                            "sku": {
+                              "type": "string"
+                            },
+                            "current_stock": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/profit": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Ottiene l'analisi dei profitti per fornitore",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "description": "Data di inizio analisi (YYYY-MM-DD)"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "description": "Data di fine analisi (YYYY-MM-DD)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analisi profitti recuperata con successo",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "period": {
+                  "type": "object",
+                  "properties": {
+                    "start_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "end_date": {
+                      "type": "string",
+                      "format": "date"
+                    }
+                  }
+                },
+                "data": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "company_name": {
+                        "type": "string"
+                      },
+                      "total_revenue": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "total_cost": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "gross_profit": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "profit_margin": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "items_analysis": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "item_name": {
+                              "type": "string"
+                            },
+                            "revenue": {
+                              "type": "number",
+                              "format": "float"
+                            },
+                            "cost": {
+                              "type": "number",
+                              "format": "float"
+                            },
+                            "profit": {
+                              "type": "number",
+                              "format": "float"
+                            },
+                            "profit_margin": {
+                              "type": "number",
+                              "format": "float"
+                            },
+                            "sold_quantity": {
+                              "type": "integer"
+                            },
+                            "purchased_quantity": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Formato data non valido"
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -748,6 +1486,155 @@
         },
         "company_id": {
           "type": "integer"
+        }
+      }
+    },
+    "Purchase": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "company_id": {
+          "type": "integer"
+        },
+        "company_name": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "confirmed", "delivered", "cancelled"]
+        },
+        "total_amount": {
+          "type": "number",
+          "format": "float"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PurchaseItem"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "PurchaseItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "item_id": {
+          "type": "integer"
+        },
+        "item_name": {
+          "type": "string"
+        },
+        "item_sku": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "integer"
+        },
+        "unit_price": {
+          "type": "number",
+          "format": "float"
+        },
+        "total_price": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "Sale": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "customer_name": {
+          "type": "string"
+        },
+        "customer_email": {
+          "type": "string",
+          "format": "email"
+        },
+        "customer_address": {
+          "type": "string"
+        },
+        "customer_phone": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "confirmed", "shipped", "delivered", "cancelled"]
+        },
+        "total_amount": {
+          "type": "number",
+          "format": "float"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SaleItem"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "SaleItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "item_id": {
+          "type": "integer"
+        },
+        "item_name": {
+          "type": "string"
+        },
+        "item_sku": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "integer"
+        },
+        "unit_price": {
+          "type": "number",
+          "format": "float"
+        },
+        "total_price": {
+          "type": "number",
+          "format": "float"
         }
       }
     }
