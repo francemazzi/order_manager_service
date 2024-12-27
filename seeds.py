@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from werkzeug.security import generate_password_hash
 from extensions import db
 from models.user import User
@@ -109,7 +109,7 @@ def seed_database():
     if items:
         purchase = Purchase(
             company_id=tech_company.id,
-            date=datetime.utcnow() - timedelta(days=7),
+            date=datetime.now(UTC) - timedelta(days=7),
             status='delivered',
             total_amount=6999.95,
             notes='Ordine Q1 2024'
@@ -141,7 +141,7 @@ def seed_database():
             customer_email='mario.rossi@email.it',
             customer_address='Via Vittorio Veneto 10, Roma',
             customer_phone='+39 333 1234567',
-            date=datetime.utcnow() - timedelta(days=3),
+            date=datetime.now(UTC) - timedelta(days=3),
             status='delivered',
             total_amount=1799.98,
             notes='Consegna presso ufficio'

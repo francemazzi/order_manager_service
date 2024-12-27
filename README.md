@@ -140,6 +140,21 @@ pip install -r requirements.txt
 python app.py
 ```
 
+## Aggiornamento docker
+
+```bash
+docker-compose down
+docker-compose build
+docker-compose up -d
+docker-compose exec web flask db upgrade
+```
+
+Se è la prima attiviti il contianer è possibile effettuare il seeding dei dati con il comando:
+
+```bash
+docker-compose exec web python seeds.py
+```
+
 ## Note di Sicurezza
 
 In produzione:

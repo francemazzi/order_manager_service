@@ -142,7 +142,7 @@ class SalesAnalytics:
                         'current_stock': int(item['stock'])
                     })
 
-            inventory_analysis[company_id] = analysis
+            inventory_analysis[int(company_id)] = analysis
 
         return {'data': inventory_analysis}
 
