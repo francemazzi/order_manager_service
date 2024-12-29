@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta, UTC
-from werkzeug.security import generate_password_hash
 from extensions import db
-from models.user import User
+from models.user import User, UserRole
 from models.company import Company
 from models.item import Item
 from models.purchase import Purchase, PurchaseItem
@@ -13,11 +12,12 @@ def seed_database():
     if not User.query.filter_by(email='test@example.com').first():
         admin = User(
             email='test@example.com',
-            password=generate_password_hash('test'),
             first_name='Admin',
             last_name='User',
+            role=UserRole.ADMIN,
             is_active=True
         )
+        admin.set_password('test')
         db.session.add(admin)
     
     companies = []

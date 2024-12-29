@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, redirect, url_for
 from flask_swagger_ui import get_swaggerui_blueprint
 from flask_migrate import Migrate
+from flask_cors import CORS
 import os
 from dotenv import load_dotenv
 from extensions import db, jwt, cors, mail
@@ -35,6 +36,15 @@ def wait_for_db(max_retries=5, delay_seconds=2):
 def create_app():
     app = Flask(__name__)
 
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": ["http://localhost:3000"], 
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": True
+        }
+    })
+
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
@@ -50,7 +60,6 @@ def create_app():
     db.init_app(app)
     jwt.init_app(app)
     mail.init_app(app)
-    cors.init_app(app)
     
     migrate = Migrate(app, db)
 
