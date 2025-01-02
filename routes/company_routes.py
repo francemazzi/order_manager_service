@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models.company import Company
+from models.company import Company, CompanyTag
 from extensions import db
 from http import HTTPStatus
 
@@ -9,20 +9,21 @@ company_bp = Blueprint('company', __name__)
 def create_company():
     data = request.get_json()
     
-    required_fields = ['name', 'vat_number', 'email']
+    required_fields = ['name', 'vat_number', 'email', 'tag']
     for field in required_fields:
         if field not in data:
             return jsonify({'error': f'Campo {field} obbligatorio'}), HTTPStatus.BAD_REQUEST
     
-    company = Company(
-        name=data['name'],
-        vat_number=data['vat_number'],
-        email=data['email'],
-        address=data.get('address'),
-        phone=data.get('phone')
-    )
-    
     try:
+        company = Company(
+            name=data['name'],
+            vat_number=data['vat_number'],
+            email=data['email'],
+            address=data.get('address'),
+            phone=data.get('phone'),
+            tag=CompanyTag(data['tag'])
+        )
+        
         db.session.add(company)
         db.session.commit()
         return jsonify(company.to_dict()), HTTPStatus.CREATED

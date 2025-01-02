@@ -22,6 +22,10 @@ class Sale(db.Model):
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relazione one-to-many con Company (temporaneamente nullable)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=True)
+    company = db.relationship('Company', backref=db.backref('sales', lazy=True))
 
     items = db.relationship('SaleItem', backref='sale', cascade='all, delete-orphan')
 
@@ -39,6 +43,8 @@ class Sale(db.Model):
             'status': self.status,
             'total_amount': float(self.total_amount),
             'notes': self.notes,
+            'company_id': self.company_id,
+            'company': self.company.to_dict() if self.company else None,
             'items': [item.to_dict() for item in self.items],
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()

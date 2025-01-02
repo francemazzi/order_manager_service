@@ -33,6 +33,15 @@
                 },
                 "last_name": {
                   "type": "string"
+                },
+                "company_id": {
+                  "type": "integer",
+                  "description": "ID dell'azienda di appartenenza"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": ["admin", "manager", "supplier", "basic"],
+                  "default": "basic"
                 }
               },
               "required": ["email", "password"]
@@ -161,6 +170,15 @@
                 "last_name": {
                   "type": "string"
                 },
+                "company_id": {
+                  "type": "integer",
+                  "description": "ID dell'azienda di appartenenza"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": ["admin", "manager", "supplier", "basic"],
+                  "default": "basic"
+                },
                 "is_active": {
                   "type": "boolean",
                   "default": true
@@ -179,6 +197,9 @@
           },
           "400": {
             "description": "Dati mancanti o non validi"
+          },
+          "404": {
+            "description": "Azienda non trovata"
           },
           "409": {
             "description": "Email già registrata"
@@ -240,6 +261,14 @@
                 "last_name": {
                   "type": "string"
                 },
+                "company_id": {
+                  "type": "integer",
+                  "description": "ID dell'azienda di appartenenza"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": ["admin", "manager", "supplier", "basic"]
+                },
                 "is_active": {
                   "type": "boolean"
                 }
@@ -255,7 +284,7 @@
             }
           },
           "404": {
-            "description": "Utente non trovato"
+            "description": "Utente o azienda non trovati"
           },
           "409": {
             "description": "Email già registrata"
@@ -327,9 +356,14 @@
                 },
                 "phone": {
                   "type": "string"
+                },
+                "tag": {
+                  "type": "string",
+                  "enum": ["buyer", "supplier", "customer"],
+                  "description": "Tipologia di azienda"
                 }
               },
-              "required": ["name", "vat_number", "email"]
+              "required": ["name", "vat_number", "email", "tag"]
             }
           }
         ],
@@ -842,6 +876,10 @@
                 "customer_phone": {
                   "type": "string"
                 },
+                "company_id": {
+                  "type": "integer",
+                  "description": "ID dell'azienda che effettua la vendita"
+                },
                 "items": {
                   "type": "array",
                   "items": {
@@ -881,7 +919,7 @@
                   ]
                 }
               },
-              "required": ["customer_name", "items"]
+              "required": ["customer_name", "items", "company_id"]
             }
           }
         ],
@@ -896,7 +934,7 @@
             "description": "Dati mancanti o non validi"
           },
           "404": {
-            "description": "Prodotto non trovato"
+            "description": "Prodotto o azienda non trovati"
           }
         }
       }
@@ -1354,8 +1392,27 @@
         "last_name": {
           "type": "string"
         },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "manager", "supplier", "basic"]
+        },
+        "company_id": {
+          "type": "integer",
+          "description": "ID dell'azienda di appartenenza"
+        },
+        "company": {
+          "$ref": "#/definitions/Company"
+        },
         "is_active": {
           "type": "boolean"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
@@ -1380,6 +1437,11 @@
         },
         "phone": {
           "type": "string"
+        },
+        "tag": {
+          "type": "string",
+          "enum": ["buyer", "supplier", "customer"],
+          "description": "Tipologia di azienda"
         },
         "created_at": {
           "type": "string",
@@ -1578,6 +1640,13 @@
         },
         "customer_phone": {
           "type": "string"
+        },
+        "company_id": {
+          "type": "integer",
+          "description": "ID dell'azienda che effettua la vendita"
+        },
+        "company": {
+          "$ref": "#/definitions/Company"
         },
         "date": {
           "type": "string",

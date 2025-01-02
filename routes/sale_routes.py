@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from models.sale import Sale, SaleItem, SaleStatus
 from models.item import Item
+from models.company import Company
 from extensions import db
 from http import HTTPStatus
 
@@ -10,10 +11,15 @@ sale_bp = Blueprint('sale', __name__)
 def create_sale():
     data = request.get_json()
     
-    required_fields = ['customer_name', 'items']
+    required_fields = ['customer_name', 'items', 'company_id']
     for field in required_fields:
         if field not in data:
             return jsonify({'error': f'Campo {field} obbligatorio'}), HTTPStatus.BAD_REQUEST
+    
+    # Verifica che l'azienda esista
+    company = Company.query.get(data['company_id'])
+    if not company:
+        return jsonify({'error': f'Azienda {data["company_id"]} non trovata'}), HTTPStatus.NOT_FOUND
     
     total_amount = 0
     sale_items = []
@@ -46,7 +52,8 @@ def create_sale():
             customer_phone=data.get('customer_phone'),
             total_amount=total_amount,
             notes=data.get('notes'),
-            status=data.get('status', SaleStatus.PENDING)
+            status=data.get('status', SaleStatus.PENDING),
+            company_id=company.id
         )
         
         for item_data in sale_items:

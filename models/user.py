@@ -20,6 +20,9 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
+    
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
+    company = db.relationship('Company', backref=db.backref('users', lazy=True))
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -34,6 +37,8 @@ class User(db.Model):
             'first_name': self.first_name,
             'last_name': self.last_name,
             'role': self.role.value if self.role else None,
+            'company_id': self.company_id,
+            'company': self.company.to_dict() if self.company else None,
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None

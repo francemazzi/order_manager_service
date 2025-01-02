@@ -1,10 +1,2 @@
-- gestione ordini
-- creazione ordini
-- modifica ordini
-- eliminazione ordini
-- gestione prodotti
-- creazione prodotti
-- modifica prodotti
-- eliminazione prodotti
-- gestione utenti
+- gestione tipologia di company -> buyer, suppleir, costumer
 - recupero password
