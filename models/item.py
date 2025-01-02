@@ -12,6 +12,7 @@ class Item(db.Model):
     sku = db.Column(db.String(50), nullable=False)
     stock = db.Column(db.Integer, default=0)
     stock_unit = db.Column(db.String(20), nullable=False, default='PZ')  
+    gross_margin = db.Column(db.Numeric(5, 2), nullable=True)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -33,6 +34,7 @@ class Item(db.Model):
             'sku': self.sku,
             'stock': self.stock,
             'stock_unit': self.stock_unit,
+            'gross_margin': float(self.gross_margin) if self.gross_margin is not None else None,
             'company_id': self.company_id,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()

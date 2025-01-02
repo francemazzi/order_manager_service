@@ -494,61 +494,69 @@
             "required": true,
             "schema": {
               "type": "object",
+              "required": ["name", "price", "sku", "company_id"],
               "properties": {
                 "name": {
-                  "type": "string",
-                  "description": "Nome del prodotto"
+                  "type": "string"
                 },
                 "description": {
                   "type": "string"
                 },
                 "price": {
                   "type": "number",
-                  "format": "float",
-                  "description": "Prezzo del prodotto"
+                  "format": "float"
                 },
                 "price_unit": {
                   "type": "string",
-                  "description": "Unità di misura del prezzo (es. EUR, USD)",
                   "default": "EUR"
                 },
                 "sku": {
-                  "type": "string",
-                  "description": "Codice SKU del prodotto"
+                  "type": "string"
                 },
                 "stock": {
                   "type": "integer",
-                  "description": "Quantità disponibile"
+                  "default": 0
                 },
                 "stock_unit": {
                   "type": "string",
-                  "description": "Unità di misura dello stock (es. PZ, KG, LT)",
                   "default": "PZ"
                 },
+                "gross_margin": {
+                  "type": "number",
+                  "format": "float",
+                  "description": "Margine lordo percentuale",
+                  "nullable": true
+                },
                 "company_id": {
-                  "type": "integer",
-                  "description": "ID dell'azienda fornitrice"
+                  "type": "integer"
                 }
               },
-              "required": ["name", "price", "sku", "company_id"]
+              "example": {
+                "name": "Nuovo Prodotto",
+                "description": "Descrizione del prodotto",
+                "price": 100.0,
+                "price_unit": "EUR",
+                "sku": "PRD001",
+                "stock": 10,
+                "stock_unit": "PZ",
+                "gross_margin": 25.5,
+                "company_id": 1
+              }
             }
           }
         ],
         "responses": {
           "201": {
-            "description": "Prodotto creato con successo",
+            "description": "Item creato con successo",
             "schema": {
               "$ref": "#/definitions/Item"
             }
           },
           "400": {
-            "description": "Dati mancanti o non validi"
+            "description": "Errore nella richiesta"
           },
           "404": {
             "description": "Azienda non trovata"
-          },
-          "409": {
-            "description": "SKU già esistente per questa azienda"
           }
         }
       }
@@ -1373,6 +1381,230 @@
           }
         }
       }
+    },
+    "/analytics/sales/trend": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Ottiene l'andamento delle vendite nel tempo",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "description": "Data di inizio analisi (YYYY-MM-DD). Default: 1 anno fa"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "description": "Data di fine analisi (YYYY-MM-DD). Default: data corrente"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analisi dell'andamento vendite recuperata con successo",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "period": {
+                  "type": "object",
+                  "properties": {
+                    "start_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "end_date": {
+                      "type": "string",
+                      "format": "date"
+                    }
+                  }
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "monthly_trend": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "month": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "total_orders": {
+                            "type": "integer"
+                          },
+                          "total_revenue": {
+                            "type": "number",
+                            "format": "float"
+                          },
+                          "unique_customers": {
+                            "type": "integer"
+                          },
+                          "average_order_value": {
+                            "type": "number",
+                            "format": "float"
+                          },
+                          "total_items_sold": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "total_orders": {
+                          "type": "integer"
+                        },
+                        "total_revenue": {
+                          "type": "number",
+                          "format": "float"
+                        },
+                        "total_items_sold": {
+                          "type": "integer"
+                        },
+                        "average_order_value": {
+                          "type": "number",
+                          "format": "float"
+                        },
+                        "unique_customers": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Formato data non valido"
+          }
+        }
+      }
+    },
+    "/analytics/items/top": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Ottiene l'analisi degli item più venduti",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "description": "Data di inizio analisi (YYYY-MM-DD). Default: 1 anno fa"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "description": "Data di fine analisi (YYYY-MM-DD). Default: data corrente"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "description": "Numero massimo di item da restituire. Default: 10"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analisi degli item più venduti recuperata con successo",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "period": {
+                  "type": "object",
+                  "properties": {
+                    "start_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "end_date": {
+                      "type": "string",
+                      "format": "date"
+                    }
+                  }
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "top_items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "item_id": {
+                            "type": "integer"
+                          },
+                          "item_name": {
+                            "type": "string"
+                          },
+                          "sku": {
+                            "type": "string"
+                          },
+                          "company": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "total_quantity": {
+                            "type": "integer"
+                          },
+                          "total_revenue": {
+                            "type": "number",
+                            "format": "float"
+                          },
+                          "orders_count": {
+                            "type": "integer"
+                          },
+                          "average_price": {
+                            "type": "number",
+                            "format": "float"
+                          },
+                          "current_stock": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "total_items_sold": {
+                          "type": "integer"
+                        },
+                        "total_revenue": {
+                          "type": "number",
+                          "format": "float"
+                        },
+                        "average_price": {
+                          "type": "number",
+                          "format": "float"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Formato data non valido"
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -1492,19 +1724,24 @@
         },
         "price_unit": {
           "type": "string",
-          "description": "Unità di misura del prezzo",
-          "example": "EUR"
+          "default": "EUR"
         },
         "sku": {
           "type": "string"
         },
         "stock": {
-          "type": "integer"
+          "type": "integer",
+          "default": 0
         },
         "stock_unit": {
           "type": "string",
-          "description": "Unità di misura dello stock",
-          "example": "PZ"
+          "default": "PZ"
+        },
+        "gross_margin": {
+          "type": "number",
+          "format": "float",
+          "description": "Margine lordo percentuale",
+          "nullable": true
         },
         "company_id": {
           "type": "integer"
@@ -1516,6 +1753,46 @@
         "updated_at": {
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "ItemCreate": {
+      "type": "object",
+      "required": ["name", "price", "sku", "company_id"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number",
+          "format": "float"
+        },
+        "price_unit": {
+          "type": "string",
+          "default": "EUR"
+        },
+        "sku": {
+          "type": "string"
+        },
+        "stock": {
+          "type": "integer",
+          "default": 0
+        },
+        "stock_unit": {
+          "type": "string",
+          "default": "PZ"
+        },
+        "gross_margin": {
+          "type": "number",
+          "format": "float",
+          "description": "Margine lordo percentuale",
+          "nullable": true
+        },
+        "company_id": {
+          "type": "integer"
         }
       }
     },
@@ -1533,8 +1810,7 @@
           "format": "float"
         },
         "price_unit": {
-          "type": "string",
-          "description": "Unità di misura del prezzo (es. EUR, USD)"
+          "type": "string"
         },
         "sku": {
           "type": "string"
@@ -1543,11 +1819,13 @@
           "type": "integer"
         },
         "stock_unit": {
-          "type": "string",
-          "description": "Unità di misura dello stock (es. PZ, KG, LT)"
+          "type": "string"
         },
-        "company_id": {
-          "type": "integer"
+        "gross_margin": {
+          "type": "number",
+          "format": "float",
+          "description": "Margine lordo percentuale",
+          "nullable": true
         }
       }
     },

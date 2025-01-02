@@ -74,7 +74,7 @@ class SalesAnalytics:
                 }
                 analysis['items_analysis'].append(item_analysis)
 
-            company_analysis[company_id] = analysis
+            company_analysis[int(company_id)] = analysis
 
         return {
             'period': {
@@ -272,3 +272,159 @@ class SalesAnalytics:
             'quantity': int(row['quantity']),
             'revenue': float(row['total_price'])
         } for _, row in top_items.iterrows()] 
+
+    @staticmethod
+    def get_sales_trend(start_date=None, end_date=None):
+        """Analisi dell'andamento delle vendite nel tempo"""
+        if not start_date:
+            start_date = datetime.now() - timedelta(days=365)  # Default 1 anno
+        if not end_date:
+            end_date = datetime.now()
+
+        query = text("""
+            SELECT 
+                DATE_TRUNC('month', s.date) as month,
+                COUNT(DISTINCT s.id) as total_orders,
+                SUM(s.total_amount) as total_revenue,
+                COUNT(DISTINCT s.customer_name) as unique_customers,
+                AVG(s.total_amount) as average_order_value,
+                SUM(si.quantity) as total_items_sold
+            FROM sales s
+            JOIN sale_items si ON s.id = si.sale_id
+            WHERE s.date BETWEEN :start_date AND :end_date
+            AND s.status != 'cancelled'
+            GROUP BY DATE_TRUNC('month', s.date)
+            ORDER BY month ASC
+        """)
+
+        result = db.session.execute(query, {
+            'start_date': start_date,
+            'end_date': end_date
+        })
+
+        df = pd.DataFrame(result.fetchall())
+        if df.empty:
+            return {
+                'message': 'Nessun dato disponibile per il periodo selezionato',
+                'data': {
+                    'monthly_trend': [],
+                    'summary': {
+                        'total_orders': 0,
+                        'total_revenue': 0,
+                        'total_items_sold': 0,
+                        'average_order_value': 0,
+                        'unique_customers': 0
+                    }
+                }
+            }
+
+        monthly_trend = [{
+            'month': month.strftime('%Y-%m'),
+            'total_orders': int(orders),
+            'total_revenue': float(revenue),
+            'unique_customers': int(customers),
+            'average_order_value': float(avg_value),
+            'total_items_sold': int(items)
+        } for month, orders, revenue, customers, avg_value, items in df.values]
+
+        summary = {
+            'total_orders': int(df['total_orders'].sum()),
+            'total_revenue': float(df['total_revenue'].sum()),
+            'total_items_sold': int(df['total_items_sold'].sum()),
+            'average_order_value': float(df['average_order_value'].mean()),
+            'unique_customers': int(df['unique_customers'].sum())
+        }
+
+        return {
+            'period': {
+                'start_date': start_date.strftime('%Y-%m-%d'),
+                'end_date': end_date.strftime('%Y-%m-%d')
+            },
+            'data': {
+                'monthly_trend': monthly_trend,
+                'summary': summary
+            }
+        } 
+
+    @staticmethod
+    def get_top_items_analysis(start_date=None, end_date=None, limit=10):
+        """Analisi degli item più venduti"""
+        if not start_date:
+            start_date = datetime.now() - timedelta(days=365)  # Default 1 anno
+        if not end_date:
+            end_date = datetime.now()
+
+        query = text("""
+            SELECT 
+                i.id as item_id,
+                i.name as item_name,
+                i.sku,
+                c.id as company_id,
+                c.name as company_name,
+                SUM(si.quantity) as total_quantity,
+                SUM(si.total_price) as total_revenue,
+                COUNT(DISTINCT s.id) as orders_count,
+                AVG(si.unit_price) as average_price,
+                i.stock as current_stock
+            FROM items i
+            JOIN sale_items si ON i.id = si.item_id
+            JOIN sales s ON si.sale_id = s.id
+            JOIN companies c ON i.company_id = c.id
+            WHERE s.date BETWEEN :start_date AND :end_date
+            AND s.status != 'cancelled'
+            GROUP BY i.id, i.name, i.sku, c.id, c.name, i.stock
+            ORDER BY total_quantity DESC
+            LIMIT :limit
+        """)
+
+        result = db.session.execute(query, {
+            'start_date': start_date,
+            'end_date': end_date,
+            'limit': limit
+        })
+
+        df = pd.DataFrame(result.fetchall())
+        if df.empty:
+            return {
+                'message': 'Nessun dato disponibile per il periodo selezionato',
+                'data': {
+                    'top_items': [],
+                    'summary': {
+                        'total_items_sold': 0,
+                        'total_revenue': 0,
+                        'average_price': 0
+                    }
+                }
+            }
+
+        top_items = [{
+            'item_id': int(item_id),
+            'item_name': item_name,
+            'sku': sku,
+            'company': {
+                'id': int(company_id),
+                'name': company_name
+            },
+            'total_quantity': int(quantity),
+            'total_revenue': float(revenue),
+            'orders_count': int(orders),
+            'average_price': float(avg_price),
+            'current_stock': int(stock)
+        } for item_id, item_name, sku, company_id, company_name, quantity, revenue, orders, avg_price, stock in df.values]
+
+        summary = {
+            'total_items_sold': int(df['total_quantity'].sum()),
+            'total_revenue': float(df['total_revenue'].sum()),
+            'average_price': float(df['average_price'].mean())
+        }
+
+        return {
+            'period': {
+                'start_date': start_date.strftime('%Y-%m-%d'),
+                'end_date': end_date.strftime('%Y-%m-%d')
+            },
+            'data': {
+                'top_items': top_items,
+                'summary': summary
+            }
+        } 

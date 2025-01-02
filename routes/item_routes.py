@@ -25,7 +25,10 @@ def create_item():
         price=data['price'],
         sku=data['sku'],
         stock=data.get('stock', 0),
-        company_id=data['company_id']
+        company_id=data['company_id'],
+        price_unit=data.get('price_unit', 'EUR'),
+        stock_unit=data.get('stock_unit', 'PZ'),
+        gross_margin=data.get('gross_margin')
     )
     
     try:
