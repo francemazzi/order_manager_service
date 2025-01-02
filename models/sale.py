@@ -23,7 +23,6 @@ class Sale(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relazione one-to-many con Company (temporaneamente nullable)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=True)
     company = db.relationship('Company', backref=db.backref('sales', lazy=True))
 

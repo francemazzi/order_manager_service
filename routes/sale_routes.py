@@ -16,7 +16,6 @@ def create_sale():
         if field not in data:
             return jsonify({'error': f'Campo {field} obbligatorio'}), HTTPStatus.BAD_REQUEST
     
-    # Verifica che l'azienda esista
     company = Company.query.get(data['company_id'])
     if not company:
         return jsonify({'error': f'Azienda {data["company_id"]} non trovata'}), HTTPStatus.NOT_FOUND
