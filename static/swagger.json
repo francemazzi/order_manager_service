@@ -1067,14 +1067,14 @@
             "in": "query",
             "type": "string",
             "format": "date",
-            "description": "Data di inizio analisi (YYYY-MM-DD)"
+            "description": "Data di inizio analisi (YYYY-MM-DD). Default: 30 giorni fa"
           },
           {
             "name": "end_date",
             "in": "query",
             "type": "string",
             "format": "date",
-            "description": "Data di fine analisi (YYYY-MM-DD)"
+            "description": "Data di fine analisi (YYYY-MM-DD). Default: data corrente"
           }
         ],
         "responses": {
@@ -1284,14 +1284,14 @@
             "in": "query",
             "type": "string",
             "format": "date",
-            "description": "Data di inizio analisi (YYYY-MM-DD)"
+            "description": "Data di inizio analisi (YYYY-MM-DD). Default: 30 giorni fa"
           },
           {
             "name": "end_date",
             "in": "query",
             "type": "string",
             "format": "date",
-            "description": "Data di fine analisi (YYYY-MM-DD)"
+            "description": "Data di fine analisi (YYYY-MM-DD). Default: data corrente"
           }
         ],
         "responses": {
