@@ -277,7 +277,7 @@ class SalesAnalytics:
     def get_sales_trend(start_date=None, end_date=None):
         """Analisi dell'andamento delle vendite nel tempo"""
         if not start_date:
-            start_date = datetime.now() - timedelta(days=365)  # Default 1 anno
+            start_date = datetime.now() - timedelta(days=365)   
         if not end_date:
             end_date = datetime.now()
 
@@ -350,7 +350,7 @@ class SalesAnalytics:
     def get_top_items_analysis(start_date=None, end_date=None, limit=10):
         """Analisi degli item più venduti"""
         if not start_date:
-            start_date = datetime.now() - timedelta(days=365)  # Default 1 anno
+            start_date = datetime.now() - timedelta(days=365) 
         if not end_date:
             end_date = datetime.now()
 
@@ -428,3 +428,257 @@ class SalesAnalytics:
                 'summary': summary
             }
         } 
+
+    @staticmethod
+    def get_dashboard_metrics():
+        """Ottiene le metriche principali per la dashboard"""
+        current_month = datetime.now().replace(day=1)
+        last_month = (current_month - timedelta(days=1)).replace(day=1)
+
+        query = text("""
+            WITH monthly_metrics AS (
+                SELECT 
+                    DATE_TRUNC('month', s.date) as month,
+                    COUNT(DISTINCT s.id) as total_sales,
+                    AVG(s.total_amount) as average_sale,
+                    COUNT(DISTINCT CASE WHEN s.status = 'pending' THEN s.id END) as inquiries,
+                    COUNT(DISTINCT CASE WHEN s.status IN ('confirmed', 'shipped', 'delivered') THEN s.id END) as invoices
+                FROM sales s
+                WHERE s.date >= :last_month
+                AND s.status != 'cancelled'
+                GROUP BY DATE_TRUNC('month', s.date)
+            )
+            SELECT 
+                month,
+                total_sales,
+                average_sale,
+                inquiries,
+                invoices,
+                LAG(total_sales) OVER (ORDER BY month) as prev_total_sales,
+                LAG(inquiries) OVER (ORDER BY month) as prev_inquiries,
+                LAG(invoices) OVER (ORDER BY month) as prev_invoices
+            FROM monthly_metrics
+            ORDER BY month DESC
+            LIMIT 2
+        """)
+
+        result = db.session.execute(query, {
+            'last_month': last_month
+        })
+
+        df = pd.DataFrame(result.fetchall())
+        if df.empty:
+            return {
+                'average_sales': {
+                    'value': 0,
+                    'change': 0
+                },
+                'total_sales': {
+                    'value': 0,
+                    'change': 0
+                },
+                'inquiries': {
+                    'value': 0,
+                    'change': 0
+                },
+                'invoices': {
+                    'value': 0,
+                    'change': 0
+                }
+            }
+
+        current = df.iloc[0]
+        
+        return {
+            'average_sales': {
+                'value': float(current['average_sale']) if pd.notnull(current['average_sale']) else 0,
+                'change': 0 
+            },
+            'total_sales': {
+                'value': int(current['total_sales']),
+                'change': SalesAnalytics._calculate_percentage_change(
+                    current['total_sales'], 
+                    current['prev_total_sales']
+                )
+            },
+            'inquiries': {
+                'value': int(current['inquiries']),
+                'change': SalesAnalytics._calculate_percentage_change(
+                    current['inquiries'], 
+                    current['prev_inquiries']
+                )
+            },
+            'invoices': {
+                'value': int(current['invoices']),
+                'change': SalesAnalytics._calculate_percentage_change(
+                    current['invoices'], 
+                    current['prev_invoices']
+                )
+            }
+        }
+
+    @staticmethod
+    def get_hourly_profit_sales():
+        """Ottiene l'andamento orario di profitti e vendite"""
+        query = text("""
+            WITH hourly_sales AS (
+                SELECT 
+                    DATE_TRUNC('hour', s.date) as hour,
+                    SUM(si.total_price) as sales_amount,
+                    SUM(
+                        CASE 
+                            WHEN i.gross_margin IS NOT NULL 
+                            THEN si.total_price * (i.gross_margin / 100)
+                            ELSE si.total_price * 0.2  -- margine di default del 20%
+                        END
+                    ) as profit
+                FROM sales s
+                JOIN sale_items si ON s.id = si.sale_id
+                JOIN items i ON si.item_id = i.id
+                WHERE s.date >= NOW() - INTERVAL '24 hours'
+                AND s.status != 'cancelled'
+                GROUP BY DATE_TRUNC('hour', s.date)
+                ORDER BY hour ASC
+            )
+            SELECT 
+                hour,
+                sales_amount,
+                profit,
+                EXTRACT(HOUR FROM hour) as hour_number
+            FROM hourly_sales
+        """)
+
+        result = db.session.execute(query)
+        df = pd.DataFrame(result.fetchall())
+        if df.empty:
+            return {
+                'hours': [],
+                'sales': [],
+                'profit': []
+            }
+
+        return {
+            'hours': [f"{int(row['hour_number']):02d}:00" for _, row in df.iterrows()],
+            'sales': [float(row['sales_amount']) for _, row in df.iterrows()],
+            'profit': [float(row['profit']) for _, row in df.iterrows()]
+        }
+
+    @staticmethod
+    def get_sales_by_brand():
+        """Ottiene le vendite totali per brand/company"""
+        query = text("""
+            SELECT 
+                c.name as brand,
+                COUNT(DISTINCT s.id) as total_orders,
+                SUM(si.total_price) as total_sales
+            FROM sales s
+            JOIN sale_items si ON s.id = si.sale_id
+            JOIN items i ON si.item_id = i.id
+            JOIN companies c ON i.company_id = c.id
+            WHERE s.status != 'cancelled'
+            GROUP BY c.id, c.name
+            ORDER BY total_sales DESC
+        """)
+
+        result = db.session.execute(query)
+        df = pd.DataFrame(result.fetchall())
+        if df.empty:
+            return {
+                'brands': [],
+                'sales': []
+            }
+
+        return {
+            'brands': df['brand'].tolist(),
+            'sales': [float(x) for x in df['total_sales'].tolist()]
+        }
+
+    @staticmethod
+    def get_brand_popularity():
+        """Ottiene la popolarità dei brand basata su vendite e recensioni"""
+        query = text("""
+            WITH brand_metrics AS (
+                SELECT 
+                    c.id,
+                    c.name as brand,
+                    COUNT(DISTINCT s.id) as total_orders,
+                    SUM(si.quantity) as total_items_sold,
+                    COUNT(DISTINCT s.customer_name) as unique_customers
+                FROM companies c
+                JOIN items i ON c.id = i.company_id
+                JOIN sale_items si ON i.id = si.item_id
+                JOIN sales s ON si.sale_id = s.id
+                WHERE s.status != 'cancelled'
+                GROUP BY c.id, c.name
+            )
+            SELECT 
+                brand,
+                total_orders,
+                total_items_sold,
+                unique_customers,
+                (total_orders * 0.4 + total_items_sold * 0.4 + unique_customers * 0.2) as popularity_score
+            FROM brand_metrics
+            ORDER BY popularity_score DESC
+        """)
+
+        result = db.session.execute(query)
+        df = pd.DataFrame(result.fetchall())
+        if df.empty:
+            return {
+                'brands': [],
+                'popularity': []
+            }
+
+        max_score = df['popularity_score'].max()
+        df['normalized_score'] = (df['popularity_score'] / max_score) * 100
+
+        return {
+            'brands': df['brand'].tolist(),
+            'popularity': [float(x) for x in df['normalized_score'].tolist()]
+        }
+
+    @staticmethod
+    def get_brand_average_sales(period='monthly'):
+        """Ottiene la media delle vendite per brand (settimanale o mensile)"""
+        interval = "week" if period == 'weekly' else "month"
+        
+        query = text(f"""
+            WITH brand_sales AS (
+                SELECT 
+                    c.name as brand,
+                    DATE_TRUNC(:interval, s.date) as period,
+                    SUM(si.total_price) as total_sales
+                FROM sales s
+                JOIN sale_items si ON s.id = si.sale_id
+                JOIN items i ON si.item_id = i.id
+                JOIN companies c ON i.company_id = c.id
+                WHERE s.status != 'cancelled'
+                GROUP BY c.name, DATE_TRUNC(:interval, s.date)
+            )
+            SELECT 
+                brand,
+                AVG(total_sales) as average_sales
+            FROM brand_sales
+            GROUP BY brand
+            ORDER BY average_sales DESC
+        """)
+
+        result = db.session.execute(query, {'interval': interval})
+        df = pd.DataFrame(result.fetchall())
+        if df.empty:
+            return {
+                'brands': [],
+                'averages': []
+            }
+
+        return {
+            'brands': df['brand'].tolist(),
+            'averages': [float(x) for x in df['average_sales'].tolist()]
+        }
+
+    @staticmethod
+    def _calculate_percentage_change(current, previous):
+        """Calcola la variazione percentuale tra due valori"""
+        if pd.isnull(previous) or previous == 0:
+            return 0
+        return ((current - previous) / previous) * 100 

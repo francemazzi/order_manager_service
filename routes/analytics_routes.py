@@ -84,4 +84,48 @@ def get_top_items():
     except ValueError as e:
         return jsonify({'error': 'Formato data non valido'}), HTTPStatus.BAD_REQUEST
     except Exception as e:
+        return jsonify({'error': str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
+
+@analytics_bp.route('/analytics/dashboard/metrics', methods=['GET'])
+def get_dashboard_metrics():
+    try:
+        result = SalesAnalytics.get_dashboard_metrics()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
+
+@analytics_bp.route('/analytics/dashboard/hourly', methods=['GET'])
+def get_hourly_profit_sales():
+    try:
+        result = SalesAnalytics.get_hourly_profit_sales()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
+
+@analytics_bp.route('/analytics/dashboard/brands/sales', methods=['GET'])
+def get_sales_by_brand():
+    try:
+        result = SalesAnalytics.get_sales_by_brand()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
+
+@analytics_bp.route('/analytics/dashboard/brands/popularity', methods=['GET'])
+def get_brand_popularity():
+    try:
+        result = SalesAnalytics.get_brand_popularity()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
+
+@analytics_bp.route('/analytics/dashboard/brands/average-sales', methods=['GET'])
+def get_brand_average_sales():
+    try:
+        period = request.args.get('period', 'monthly')
+        if period not in ['weekly', 'monthly']:
+            return jsonify({'error': 'Periodo non valido. Usare "weekly" o "monthly"'}), HTTPStatus.BAD_REQUEST
+        
+        result = SalesAnalytics.get_brand_average_sales(period)
+        return jsonify(result)
+    except Exception as e:
         return jsonify({'error': str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR 

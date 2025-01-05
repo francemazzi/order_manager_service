@@ -1605,6 +1605,232 @@
           }
         }
       }
+    },
+    "/analytics/dashboard/metrics": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Ottiene le metriche principali della dashboard",
+        "responses": {
+          "200": {
+            "description": "Metriche recuperate con successo",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total_sales": {
+                  "type": "number",
+                  "format": "float",
+                  "description": "Totale vendite"
+                },
+                "average_sales": {
+                  "type": "number",
+                  "format": "float",
+                  "description": "Media vendite"
+                },
+                "total_inquiries": {
+                  "type": "integer",
+                  "description": "Totale richieste"
+                },
+                "total_invoices": {
+                  "type": "integer",
+                  "description": "Totale fatture"
+                },
+                "sales_growth": {
+                  "type": "number",
+                  "format": "float",
+                  "description": "Crescita vendite rispetto al periodo precedente (%)"
+                },
+                "inquiries_growth": {
+                  "type": "number",
+                  "format": "float",
+                  "description": "Crescita richieste rispetto al periodo precedente (%)"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/dashboard/hourly": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Ottiene l'andamento orario di profitti e vendite",
+        "responses": {
+          "200": {
+            "description": "Dati orari recuperati con successo",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "hourly_data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "hour": {
+                        "type": "string",
+                        "description": "Ora del giorno (formato HH:00)"
+                      },
+                      "sales": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Totale vendite nell'ora"
+                      },
+                      "profit": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Profitto totale nell'ora"
+                      },
+                      "orders": {
+                        "type": "integer",
+                        "description": "Numero di ordini nell'ora"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/dashboard/brands/sales": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Ottiene le vendite per brand",
+        "responses": {
+          "200": {
+            "description": "Vendite per brand recuperate con successo",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "brands": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "brand": {
+                        "type": "string",
+                        "description": "Nome del brand"
+                      },
+                      "total_sales": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Totale vendite"
+                      },
+                      "orders_count": {
+                        "type": "integer",
+                        "description": "Numero di ordini"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/dashboard/brands/popularity": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Ottiene la popolarità dei brand",
+        "responses": {
+          "200": {
+            "description": "Popolarità dei brand recuperata con successo",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "brands": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "brand": {
+                        "type": "string",
+                        "description": "Nome del brand"
+                      },
+                      "popularity_score": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Punteggio di popolarità (0-100)"
+                      },
+                      "orders_weight": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Peso degli ordini nel punteggio (40%)"
+                      },
+                      "quantity_weight": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Peso della quantità venduta nel punteggio (40%)"
+                      },
+                      "customers_weight": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Peso dei clienti unici nel punteggio (20%)"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/dashboard/brands/average-sales": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Ottiene la media delle vendite per brand",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "type": "string",
+            "enum": ["weekly", "monthly"],
+            "default": "monthly",
+            "description": "Periodo di aggregazione dei dati"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Media vendite per brand recuperata con successo",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "period": {
+                  "type": "string",
+                  "enum": ["weekly", "monthly"],
+                  "description": "Periodo di aggregazione utilizzato"
+                },
+                "brands": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "brand": {
+                        "type": "string",
+                        "description": "Nome del brand"
+                      },
+                      "average_sales": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Media delle vendite nel periodo"
+                      },
+                      "total_periods": {
+                        "type": "integer",
+                        "description": "Numero di periodi considerati"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Periodo non valido"
+          }
+        }
+      }
     }
   },
   "definitions": {
