@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models.user import User, UserRole
+from models.company import Company
 from extensions import db
 from http import HTTPStatus
 
@@ -19,12 +20,18 @@ def create_user():
     if role not in [r.value for r in UserRole]:
         return jsonify({'error': f'Ruolo non valido. I ruoli disponibili sono: {", ".join([r.value for r in UserRole])}'}), HTTPStatus.BAD_REQUEST
     
+    if 'company_id' in data:
+        company = Company.query.get(data['company_id'])
+        if not company:
+            return jsonify({'error': 'Azienda non trovata'}), HTTPStatus.NOT_FOUND
+    
     user = User(
         email=data['email'],
         first_name=data.get('first_name'),
         last_name=data.get('last_name'),
         role=UserRole(role),
-        is_active=data.get('is_active', True)
+        is_active=data.get('is_active', True),
+        company_id=data.get('company_id')
     )
     user.set_password(data['password'])
     
